@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# --- IntelliJ / WebStorm 설정 (팀원 공유 금지) ---
+.idea
+.idea/
+*.iml
+*.iws
+*.ipr
