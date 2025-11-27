@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export default function RankingPage() {
+export default function Page() {
   // 실제로는 Python 백엔드에서 계산된 데이터를 fetch로 받아오게 됩니다.
   // 지금은 더미 데이터(Mock Data)로 화면을 구성합니다.
   // 테스트 용 데이터
