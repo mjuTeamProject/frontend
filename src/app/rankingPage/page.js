@@ -1,87 +1,218 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import NavBar from "../components/NavBar";
+import api from "../lib/api";
 
-export default function Page() {
-  // 실제로는 Python 백엔드에서 계산된 데이터를 fetch로 받아오게 됩니다.
-  // 지금은 더미 데이터(Mock Data)로 화면을 구성합니다.
-  // 테스트 용 데이터
-  const [rankings, setRankings] = useState([
-    { id: 1, user1: '김철수', user2: '이영희', score: 98, comment: '천생연분' },
-    { id: 2, user1: '박서준', user2: '김다미', score: 95, comment: '운명의 짝' },
-    { id: 3, user1: '이도현', user2: '고민시', score: 91, comment: '환상의 케미' },
-    { id: 4, user1: '공유', user2: '김고은', score: 88, comment: '아주 좋아요' },
-    { id: 5, user1: '최우식', user2: '김다미', score: 85, comment: '좋은 인연' },
-    { id: 6, user1: '손석구', user2: '김지원', score: 79, comment: '노력하면 극복' },
-    { id: 7, user1: '정해인', user2: '지수', score: 72, comment: '보통의 연애' },
-  ]);
+// --- SVG Icons for Medals ---
+const GoldMedal = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-10 h-10 text-yellow-400 drop-shadow-md filter">
+        <path fillRule="evenodd" d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 00-.584.859 6.753 6.753 0 006.138 5.6 6.73 6.73 0 002.743 1.346A6.707 6.707 0 019.279 15H8.54c-1.036 0-1.875.84-1.875 1.875V19.5h-.75a2.25 2.25 0 00-2.25 2.25c0 .414.336.75.75.75h15a.75.75 0 00.75-.75 2.25 2.25 0 00-2.25-2.25h-.75v-2.625c0-1.036-.84-1.875-1.875-1.875h-.739a6.706 6.706 0 01-1.112-3.173 6.73 6.73 0 002.743-1.347 6.753 6.753 0 006.139-5.6.75.75 0 00-.585-.858 47.077 47.077 0 00-3.07-.543V2.62a.75.75 0 00-.658-.744 49.22 49.22 0 00-6.093-.377c-2.063 0-4.096.128-6.093.377a.75.75 0 00-.657.744zm0 2.629c0 1.196.312 2.32.857 3.294A5.266 5.266 0 013.16 5.337a45.6 45.6 0 012.006-.343v.256zm13.5 0v-.256c.674.1 1.343.214 2.006.343a5.265 5.265 0 01-2.863 3.207 6.72 6.72 0 00.857-3.294z" clipRule="evenodd" />
+    </svg>
+);
 
-  
+const SilverMedal = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-10 h-10 text-slate-300 drop-shadow-md filter">
+        <path fillRule="evenodd" d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 00-.584.859 6.753 6.753 0 006.138 5.6 6.73 6.73 0 002.743 1.346A6.707 6.707 0 019.279 15H8.54c-1.036 0-1.875.84-1.875 1.875V19.5h-.75a2.25 2.25 0 00-2.25 2.25c0 .414.336.75.75.75h15a.75.75 0 00.75-.75 2.25 2.25 0 00-2.25-2.25h-.75v-2.625c0-1.036-.84-1.875-1.875-1.875h-.739a6.706 6.706 0 01-1.112-3.173 6.73 6.73 0 002.743-1.347 6.753 6.753 0 006.139-5.6.75.75 0 00-.585-.858 47.077 47.077 0 00-3.07-.543V2.62a.75.75 0 00-.658-.744 49.22 49.22 0 00-6.093-.377c-2.063 0-4.096.128-6.093.377a.75.75 0 00-.657.744zm0 2.629c0 1.196.312 2.32.857 3.294A5.266 5.266 0 013.16 5.337a45.6 45.6 0 012.006-.343v.256zm13.5 0v-.256c.674.1 1.343.214 2.006.343a5.265 5.265 0 01-2.863 3.207 6.72 6.72 0 00.857-3.294z" clipRule="evenodd" />
+    </svg>
+);
 
-  // 순위 아이콘/색상 결정 함수
-  const getRankBadge = (index) => {
-    switch (index) {
-      case 0: // 1등
-        return <span className="bg-yellow-400 text-white text-xs font-bold px-2 py-1 rounded-full shadow">GOLD</span>;
-      case 1: // 2등
-        return <span className="bg-gray-300 text-gray-700 text-xs font-bold px-2 py-1 rounded-full shadow">SILVER</span>;
-      case 2: // 3등
-        return <span className="bg-amber-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow">BRONZE</span>;
-      default: // 그 외
-        return <span className="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-1 rounded-full">{index + 1}위</span>;
-    }
-  };
+const BronzeMedal = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-10 h-10 text-amber-600 drop-shadow-md filter">
+        <path fillRule="evenodd" d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 00-.584.859 6.753 6.753 0 006.138 5.6 6.73 6.73 0 002.743 1.346A6.707 6.707 0 019.279 15H8.54c-1.036 0-1.875.84-1.875 1.875V19.5h-.75a2.25 2.25 0 00-2.25 2.25c0 .414.336.75.75.75h15a.75.75 0 00.75-.75 2.25 2.25 0 00-2.25-2.25h-.75v-2.625c0-1.036-.84-1.875-1.875-1.875h-.739a6.706 6.706 0 01-1.112-3.173 6.73 6.73 0 002.743-1.347 6.753 6.753 0 006.139-5.6.75.75 0 00-.585-.858 47.077 47.077 0 00-3.07-.543V2.62a.75.75 0 00-.658-.744 49.22 49.22 0 00-6.093-.377c-2.063 0-4.096.128-6.093.377a.75.75 0 00-.657.744zm0 2.629c0 1.196.312 2.32.857 3.294A5.266 5.266 0 013.16 5.337a45.6 45.6 0 012.006-.343v.256zm13.5 0v-.256c.674.1 1.343.214 2.006.343a5.265 5.265 0 01-2.863 3.207 6.72 6.72 0 00.857-3.294z" clipRule="evenodd" />
+    </svg>
+);
 
-  return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4">
-      <div className="max-w-2xl mx-auto">
-        
-        {/* 헤더 영역 */}
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">🏆 Soulmatch 명예의 전당</h1>
-          <p className="text-gray-500">최고의 궁합 점수를 기록한 커플들을 확인하세요!</p>
+export default function RankingPage() {
+    const [rankings, setRankings] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchRankings = async () => {
+            try {
+                // 백엔드 API: GET /api/ranking/daily
+                const response = await api.get('/ranking/daily');
+
+                // [수정] 백엔드에서 받은 실제 이름(user1_name, user2_name) 표시
+                if (response.data && response.data.rankings) {
+                    const mappedData = response.data.rankings.map((item) => ({
+                        id: item.id,
+                        user1: item.user1_name, // 첫 번째 사람 이름
+                        user2: item.user2_name, // 두 번째 사람 이름
+                        score: Math.round(item.score),
+                        comment: item.intro_message || "사랑 가득!",
+                        date: new Date(item.created_at).toLocaleDateString()
+                    }));
+                    setRankings(mappedData);
+                } else {
+                    console.warn("API returned no data");
+                    setRankings([]);
+                }
+
+            } catch (error) {
+                console.error("Fetching rankings failed:", error);
+                setRankings([]);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchRankings();
+    }, []);
+
+    // 순위 뱃지 렌더링 함수
+    const renderRankBadge = (rank) => {
+        switch (rank) {
+            case 0: return <GoldMedal />;
+            case 1: return <SilverMedal />;
+            case 2: return <BronzeMedal />;
+            default:
+                return (
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 font-bold text-sm border border-zinc-200 dark:border-zinc-700">
+                        {rank + 1}
+                    </div>
+                );
+        }
+    };
+
+    return (
+        <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#5c2c86] selection:text-white">
+            <NavBar />
+
+            <main className="flex-grow flex items-center justify-center px-4 py-12 relative overflow-hidden">
+                <div className="w-full max-w-3xl z-10">
+
+                    {/* Header */}
+                    <div className="text-center mb-10">
+                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm text-xs font-semibold text-zinc-500 mb-4">
+                            <span className="w-2 h-2 rounded-full bg-[#f28b2d] animate-pulse"></span>
+                            Hall of Fame
+                        </span>
+                        <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-3 text-zinc-900 dark:text-white">
+                            Soulmatch <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#5c2c86] to-[#f28b2d]">명예의 전당</span>
+                        </h1>
+                        <p className="text-zinc-500 dark:text-zinc-400">
+                            최고의 케미를 보여준 커플들을 확인해보세요!
+                        </p>
+                    </div>
+
+                    {/* Ranking Card - Glassmorphism */}
+                    <div className="bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl shadow-2xl overflow-hidden">
+
+                        {/* List Header */}
+                        <div className="hidden sm:flex items-center justify-between px-6 py-4 bg-zinc-50/50 dark:bg-zinc-950/30 border-b border-zinc-200/50 dark:border-zinc-800/50 text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                            <div className="pl-4">Rank & Couple</div>
+                            <div className="pr-4">Compatibility Score</div>
+                        </div>
+
+                        {/* Ranking Items */}
+                        <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
+                            {isLoading ? (
+                                <div className="p-10 text-center text-zinc-500">데이터를 불러오는 중입니다...</div>
+                            ) : rankings.length === 0 ? (
+                                <div className="p-10 text-center text-zinc-500">등록된 랭킹 데이터가 없습니다.<br/>첫 번째 주인공이 되어보세요!</div>
+                            ) : (
+                                rankings.map((item, index) => (
+                                    <div
+                                        key={item.id}
+                                        className={`group flex items-center justify-between p-5 sm:px-6 transition-all hover:bg-white/60 dark:hover:bg-zinc-800/60
+                                        ${index < 3 ? 'bg-gradient-to-r from-[#5c2c86]/[0.03] to-[#f28b2d]/[0.03]' : ''}`}
+                                    >
+                                        {/* Left: Rank & Names */}
+                                        <div className="flex items-center gap-4 sm:gap-6">
+                                            {/* Rank Badge */}
+                                            <div className={`flex-shrink-0 transition-transform duration-300 ${index < 3 ? 'group-hover:scale-110' : ''}`}>
+                                                {renderRankBadge(index)}
+                                            </div>
+
+                                            {/* User Info */}
+                                            <div className="flex flex-col">
+                                                <div className="font-bold text-base sm:text-lg text-zinc-800 dark:text-zinc-200 flex items-center gap-2">
+                                                    {/* [수정] 두 사람의 이름을 모두 표시하고 하트로 연결 */}
+                                                    <span>{item.user1}</span>
+                                                    <span className="text-[#f28b2d] text-xs">♥</span>
+                                                    <span>{item.user2}</span>
+                                                </div>
+                                                <div className="flex items-center gap-3 mt-1">
+                                                    <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
+                                                        {item.comment}
+                                                    </span>
+                                                    <span className="text-[10px] text-zinc-400 hidden sm:inline">{item.date}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Right: Score */}
+                                        <div className="flex items-center gap-4">
+                                            {/* Progress Bar (Visual) */}
+                                            <div className="hidden sm:block w-32 h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                                                <div
+                                                    className={`h-full rounded-full ${index < 3 ? 'bg-gradient-to-r from-[#5c2c86] to-[#f28b2d]' : 'bg-zinc-300 dark:bg-zinc-700'}`}
+                                                    style={{ width: `${item.score}%` }}
+                                                ></div>
+                                            </div>
+
+                                            {/* Score Number */}
+                                            <div className="text-right min-w-[60px]">
+                                                <span className={`block text-2xl font-black leading-none ${index < 3 ? 'text-transparent bg-clip-text bg-gradient-to-r from-[#5c2c86] to-[#f28b2d]' : 'text-zinc-400'}`}>
+                                                    {item.score}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        {/* More Button */}
+                        <div className="p-4 border-t border-zinc-200/50 dark:border-zinc-800/50 text-center bg-zinc-50/30 dark:bg-zinc-950/30">
+                            <button className="text-sm font-bold text-zinc-500 hover:text-[#5c2c86] transition-colors py-2 px-6 rounded-full hover:bg-white dark:hover:bg-zinc-800 shadow-sm border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700">
+                                전체 순위 보기 +
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            {/* Footer */}
+            <footer className="bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 pt-16 pb-8">
+                <div className="max-w-6xl mx-auto px-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+                        <div>
+                            <h4 className="font-bold text-lg mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#5c2c86] to-[#f28b2d]">
+                                Soulmatch
+                            </h4>
+                            <p className="text-sm text-zinc-500 leading-relaxed">
+                                명지대학교 팀프로젝트1 결과물입니다.<br />
+                                AI 기술을 활용하여 새로운 데이팅 경험을 제공합니다.
+                            </p>
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-sm mb-4 uppercase tracking-wider text-zinc-900 dark:text-zinc-100">Project Info</h4>
+                            <ul className="space-y-2 text-sm text-zinc-500">
+                                <li>2025학년도 2학기 상세설계보고서</li>
+                                <li>지도교수: 한승철 교수님</li>
+                                <li>소속: 명지대학교 컴퓨터공학과</li>
+                                <li>버전: v3.0</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-sm mb-4 uppercase tracking-wider text-zinc-900 dark:text-zinc-100">Team</h4>
+                            <ul className="space-y-2 text-sm text-zinc-500">
+                                <li>설계팀: mate (7조)</li>
+                                <li>Frontend: React Native / Next.js</li>
+                                <li>Backend: Python, FastAPI</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div className="text-center border-t border-zinc-200 dark:border-zinc-800 pt-8">
+                        <p className="text-xs text-zinc-400">
+                            © 2025 Soulmatch Project Team. All rights reserved.
+                        </p>
+                    </div>
+                </div>
+            </footer>
         </div>
-
-        {/* 랭킹 리스트 영역 */}
-        <div className="bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100">
-          {rankings.map((item, index) => (
-            <div 
-              key={item.id}
-              className={`flex items-center justify-between p-5 border-b border-gray-100 hover:bg-purple-50 transition-colors last:border-0 ${index < 3 ? 'bg-yellow-50/30' : ''}`}
-            >
-              {/* 왼쪽: 순위 및 이름 */}
-              <div className="flex items-center gap-4">
-                <div className="w-16 flex justify-center">
-                  {getRankBadge(index)}
-                </div>
-                <div className="flex flex-col">
-                  <div className="font-bold text-gray-800 text-lg flex items-center gap-2">
-                    {item.user1} <span className="text-pink-400 text-sm">♥</span> {item.user2}
-                  </div>
-                  <span className="text-xs text-gray-400">{item.comment}</span>
-                </div>
-              </div>
-
-              {/* 오른쪽: 점수 */}
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <span className="block text-2xl font-bold text-purple-600">{item.score}</span>
-                  <span className="text-[10px] text-gray-400 uppercase tracking-wider">Score</span>
-                </div>
-                
-                {/* 점수 게이지 바 (시각적 효과) */}
-                <div className="hidden sm:block w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-purple-400 to-pink-500"
-                    style={{ width: `${item.score}%` }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-      </div>
-    </div>
-  );
+    );
 }

@@ -1,24 +1,32 @@
+"use client"; // useEffect를 사용하기 위해 필수
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import NavBar from "./components/NavBar";
 
 export default function Home() {
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    // 컴포넌트가 로드될 때 로그인 상태 확인
+    useEffect(() => {
+        const token = localStorage.getItem("accessToken");
+        if (token) {
+            setIsLoggedIn(true);
+        }
+    }, []);
+
+    // 로그아웃 핸들러
+    const handleLogout = () => {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        setIsLoggedIn(false);
+        // 로그아웃 후 화면 새로고침 (선택 사항)
+        window.location.reload();
+    };
+
     return (
         <>
-            <NavBar>
-                <Link
-                    href="/login"
-                    className="text-sm font-medium hover:text-[#5c2c86] transition-colors"
-                >
-                    로그인
-                </Link>
-                {/* 상단 네비게이션의 '시작하기' 버튼 */}
-                <Link
-                    href="/signup"
-                    className="bg-[#5c2c86] hover:opacity-90 text-white px-4 py-2 rounded-full text-sm font-medium transition-all shadow-md hover:shadow-lg"
-                >
-                    시작하기
-                </Link>
-            </NavBar>
+            <NavBar />
 
             <main className="flex-grow">
                 {/* Hero Section */}
@@ -51,7 +59,7 @@ export default function Home() {
                             궁합 분석하기
                         </Link>
 
-                        {/* Secondary Button: 랭킹 페이지 연결 (수정됨) */}
+                        {/* Secondary Button: 랭킹 페이지 연결 */}
                         <Link
                             href="/rankingPage"
                             className="h-12 px-8 rounded-full border border-zinc-200 dark:border-zinc-800 hover:border-[#5c2c86] hover:text-[#5c2c86] bg-white dark:bg-transparent font-medium transition-all flex items-center justify-center"

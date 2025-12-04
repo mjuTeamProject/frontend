@@ -1,31 +1,31 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import NavBar from "../components/NavBar";
+import api from "../lib/api"; // API 모듈 import
 
-// 1. 아이콘 수정: 뒤에 보이던 희미한 원(path opacity=0.1) 제거
+// SVG 아이콘 컴포넌트들
 const MarsIcon = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={className}>
-        {/* 화살표 */}
         <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5L21 3" />
         <path strokeLinecap="round" strokeLinejoin="round" d="M16 3h5v5" />
-        {/* 원 */}
         <circle cx="10" cy="14" r="5" />
     </svg>
 );
 
 const VenusIcon = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={className}>
-        {/* 십자가 */}
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v6" />
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 19h6" />
-        {/* 원 */}
         <circle cx="12" cy="10" r="5" />
     </svg>
 );
 
 export default function MatchPage() {
+    const router = useRouter(); // 라우터 훅
+
     const [formData, setFormData] = useState({
         p1: { name: "", gender: 1, year: "2000", month: "1", day: "1" },
         p2: { name: "", gender: 0, year: "2000", month: "1", day: "1" },
@@ -53,40 +53,49 @@ export default function MatchPage() {
         e.preventDefault();
         setIsLoading(true);
 
-        const payload = {
-            person1: {
-                gender: formData.p1.gender,
-                birth: {
-                    year: parseInt(formData.p1.year),
-                    month: parseInt(formData.p1.month),
-                    day: parseInt(formData.p1.day),
-                }
-            },
-            person2: {
-                gender: formData.p2.gender,
-                birth: {
-                    year: parseInt(formData.p2.year),
-                    month: parseInt(formData.p2.month),
-                    day: parseInt(formData.p2.day),
-                }
-            }
-        };
+        try {
+            // 1. 백엔드 DirectAnalysisRequest 스키마에 맞춰 데이터 변환
+            const requestBody = {
+                user1_name: formData.p1.name,
+                user1_gender: formData.p1.gender,
+                user1_birth_year: parseInt(formData.p1.year),
+                user1_birth_month: parseInt(formData.p1.month),
+                user1_birth_day: parseInt(formData.p1.day),
+                user1_birth_hour: 12, // 시간은 기본값 처리 (필요시 입력폼 추가)
 
-        console.log("API Payload:", payload);
+                user2_name: formData.p2.name,
+                user2_gender: formData.p2.gender,
+                user2_birth_year: parseInt(formData.p2.year),
+                user2_birth_month: parseInt(formData.p2.month),
+                user2_birth_day: parseInt(formData.p2.day),
+                user2_birth_hour: 12,
+            };
 
-        setTimeout(() => {
+            console.log("백엔드로 전송:", requestBody);
+
+            // 2. API 호출
+            const response = await api.post("/analysis/calculate", requestBody);
+
+            console.log("분석 결과:", response.data);
+
+            // 3. 결과를 로컬 스토리지에 저장 (Score 페이지에서 사용)
+            localStorage.setItem("analysisResult", JSON.stringify(response.data));
+
+            // 4. 결과 페이지로 이동
+            router.push("/score");
+
+        } catch (error) {
+            console.error("Analysis Failed:", error);
+            const errorMsg = error.response?.data?.detail || "분석 중 오류가 발생했습니다.";
+            alert(errorMsg);
+        } finally {
             setIsLoading(false);
-            alert("분석 완료! 결과 페이지로 이동합니다.");
-        }, 2000);
+        }
     };
 
     return (
         <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans selection:bg-[#5c2c86] selection:text-white overflow-x-hidden">
-            <NavBar>
-                <Link href="/login" className="text-sm font-medium hover:text-[#5c2c86] transition-colors">
-                    로그인
-                </Link>
-            </NavBar>
+            <NavBar />
 
             <main className="flex-grow flex items-center justify-center px-4 py-12 relative">
                 {/* Background */}
@@ -132,7 +141,7 @@ export default function MatchPage() {
                                     </div>
 
                                     <div className="space-y-6">
-                                        {/* Name (한국어로 변경) */}
+                                        {/* Name */}
                                         <div>
                                             <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">이름</label>
                                             <input
@@ -145,7 +154,7 @@ export default function MatchPage() {
                                             />
                                         </div>
 
-                                        {/* Gender (한국어로 변경) */}
+                                        {/* Gender */}
                                         <div>
                                             <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">성별</label>
                                             <div className="grid grid-cols-2 gap-3">
@@ -168,7 +177,7 @@ export default function MatchPage() {
                                             </div>
                                         </div>
 
-                                        {/* Date (한국어로 변경) */}
+                                        {/* Date */}
                                         <div>
                                             <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">생년월일</label>
                                             <div className="flex gap-2">
@@ -247,7 +256,7 @@ export default function MatchPage() {
                                     </div>
 
                                     <div className="space-y-6">
-                                        {/* Name (한국어로 변경) */}
+                                        {/* Name */}
                                         <div>
                                             <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">이름</label>
                                             <input
@@ -260,7 +269,7 @@ export default function MatchPage() {
                                             />
                                         </div>
 
-                                        {/* Gender (한국어로 변경) */}
+                                        {/* Gender */}
                                         <div>
                                             <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">성별</label>
                                             <div className="grid grid-cols-2 gap-3">
@@ -283,7 +292,7 @@ export default function MatchPage() {
                                             </div>
                                         </div>
 
-                                        {/* Date (한국어로 변경) */}
+                                        {/* Date */}
                                         <div>
                                             <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">생년월일</label>
                                             <div className="flex gap-2">

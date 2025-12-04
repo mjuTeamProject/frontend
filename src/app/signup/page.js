@@ -4,60 +4,67 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import NavBar from "../components/NavBar";
+import api from "../lib/api"; // API 모듈 import
 
 export default function SignupPage() {
     const router = useRouter();
 
-    const [email, setEmail] = useState("");
+    // 상태 관리
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [myBirth, setMyBirth] = useState("");
-    const [partnerBirth, setPartnerBirth] = useState("");
+    const [nickname, setNickname] = useState(""); // 백엔드 필수 필드 추가
+    const [email, setEmail] = useState(""); // 선택 필드
+
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleSignup = (e) => {
+    const handleSignup = async (e) => {
         e.preventDefault();
         setIsLoading(true);
         setError("");
 
         // 유효성 검사
-        if (!email || !password || !myBirth || !partnerBirth) {
-            setError("모든 정보를 입력해주세요.");
+        if (!username || !password || !nickname) {
+            setError("아이디, 비밀번호, 닉네임을 모두 입력해주세요.");
             setIsLoading(false);
             return;
         }
-        if (password.length < 6) {
-            setError("비밀번호는 최소 6자 이상이어야 합니다.");
+        if (password.length < 8) {
+            setError("비밀번호는 최소 8자 이상이어야 합니다. (대소문자/숫자 포함 권장)");
             setIsLoading(false);
             return;
         }
 
-        // 시뮬레이션
-        setTimeout(() => {
+        try {
+            // 실제 백엔드 API 호출
+            await api.post("/auth/register", {
+                username,
+                password,
+                nickname,
+                email: email || undefined, // 비어있으면 undefined 전송
+            });
+
+            alert("회원가입이 완료되었습니다! 🎉\n로그인 페이지로 이동합니다.");
+            router.push("/login");
+
+        } catch (err) {
+            console.error(err);
+            // 에러 메시지 처리 (백엔드 에러 메시지 우선 표시)
+            const msg = err.response?.data?.detail || "회원가입 중 오류가 발생했습니다.";
+            setError(msg);
+        } finally {
             setIsLoading(false);
-            alert("회원가입이 완료되었습니다! 🎉");
-            router.push("/score");
-        }, 1500);
+        }
     };
 
     return (
         <div className="min-h-screen flex flex-col bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 font-sans selection:bg-[#5c2c86] selection:text-white">
             {/* Navigation Bar */}
-            <NavBar>
-                <div className="flex items-center gap-4">
-                    <span className="text-sm text-zinc-500 hidden sm:inline">이미 계정이 있으신가요?</span>
-                    <Link
-                        href="/login"
-                        className="text-sm font-medium text-[#5c2c86] hover:text-[#f28b2d] transition-colors"
-                    >
-                        로그인
-                    </Link>
-                </div>
-            </NavBar>
+            <NavBar />
 
             {/* Main Content */}
             <main className="flex-grow flex items-center justify-center px-6 py-12 relative overflow-hidden">
-                {/* Background Decorations (통일된 배경 효과) */}
+                {/* Background Decorations */}
                 <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-[#5c2c86]/10 rounded-full blur-3xl -z-10 animate-pulse" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-[#f28b2d]/10 rounded-full blur-3xl -z-10 animate-pulse delay-700" />
 
@@ -68,65 +75,83 @@ export default function SignupPage() {
                             계정 만들기
                         </h1>
                         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                            Soulmatch에서 당신의 인연을 분석해보세요.
+                            Soulmatch 서비스 이용을 위한 ID를 생성합니다.
                         </p>
                     </div>
 
                     {/* Form */}
                     <form onSubmit={handleSignup} className="space-y-5">
 
-                        {/* Email Input */}
+                        {/* Username (ID) Input */}
                         <div>
-                            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
-                                이메일
+                            <label
+                                htmlFor="username"
+                                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5"
+                            >
+                                아이디 <span className="text-red-500">*</span>
                             </label>
                             <input
+                                id="username"
+                                type="text"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                placeholder="사용할 아이디를 입력하세요"
+                                className="w-full px-4 py-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-[#5c2c86]/20 focus:border-[#5c2c86] transition-all text-sm placeholder:text-zinc-400"
+                            />
+                        </div>
+
+                        {/* Nickname Input (New) */}
+                        <div>
+                            <label
+                                htmlFor="nickname"
+                                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5"
+                            >
+                                닉네임 <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                id="nickname"
+                                type="text"
+                                value={nickname}
+                                onChange={(e) => setNickname(e.target.value)}
+                                placeholder="서비스에서 사용할 닉네임"
+                                className="w-full px-4 py-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-[#5c2c86]/20 focus:border-[#5c2c86] transition-all text-sm placeholder:text-zinc-400"
+                            />
+                        </div>
+
+                        {/* Email Input (Optional) */}
+                        <div>
+                            <label
+                                htmlFor="email"
+                                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5"
+                            >
+                                이메일 (선택)
+                            </label>
+                            <input
+                                id="email"
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="name@example.com"
+                                placeholder="example@soulmatch.com"
                                 className="w-full px-4 py-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-[#5c2c86]/20 focus:border-[#5c2c86] transition-all text-sm placeholder:text-zinc-400"
                             />
                         </div>
 
                         {/* Password Input */}
                         <div>
-                            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
-                                비밀번호
+                            <label
+                                htmlFor="password"
+                                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5"
+                            >
+                                비밀번호 <span className="text-red-500">*</span>
                             </label>
                             <input
+                                id="password"
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                placeholder="6자 이상 입력해주세요"
+                                placeholder="비밀번호를 입력하세요 (8자 이상)"
                                 className="w-full px-4 py-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-[#5c2c86]/20 focus:border-[#5c2c86] transition-all text-sm placeholder:text-zinc-400"
                             />
-                        </div>
-
-                        {/* Birth Inputs Group */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
-                                    내 생일
-                                </label>
-                                <input
-                                    type="date"
-                                    value={myBirth}
-                                    onChange={(e) => setMyBirth(e.target.value)}
-                                    className="w-full px-3 py-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-[#5c2c86]/20 focus:border-[#5c2c86] transition-all text-sm text-zinc-600 dark:text-zinc-300"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
-                                    상대 생일
-                                </label>
-                                <input
-                                    type="date"
-                                    value={partnerBirth}
-                                    onChange={(e) => setPartnerBirth(e.target.value)}
-                                    className="w-full px-3 py-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 focus:outline-none focus:ring-2 focus:ring-[#5c2c86]/20 focus:border-[#5c2c86] transition-all text-sm text-zinc-600 dark:text-zinc-300"
-                                />
-                            </div>
                         </div>
 
                         {/* Error Message */}
@@ -148,7 +173,7 @@ export default function SignupPage() {
                             {isLoading ? (
                                 <>
                                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                                    처리중...
+                                    가입 처리중...
                                 </>
                             ) : (
                                 "회원가입 완료"
@@ -161,6 +186,45 @@ export default function SignupPage() {
                     </p>
                 </div>
             </main>
+
+            {/* Footer */}
+            <footer className="bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 pt-16 pb-8">
+                <div className="max-w-6xl mx-auto px-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+                        <div>
+                            <h4 className="font-bold text-lg mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#5c2c86] to-[#f28b2d]">
+                                Soulmatch
+                            </h4>
+                            <p className="text-sm text-zinc-500 leading-relaxed">
+                                명지대학교 팀프로젝트1 결과물입니다.<br />
+                                AI 기술을 활용하여 새로운 데이팅 경험을 제공합니다.
+                            </p>
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-sm mb-4 uppercase tracking-wider text-zinc-900 dark:text-zinc-100">Project Info</h4>
+                            <ul className="space-y-2 text-sm text-zinc-500">
+                                <li>2025학년도 2학기 상세설계보고서</li>
+                                <li>지도교수: 한승철 교수님</li>
+                                <li>소속: 명지대학교 컴퓨터공학과</li>
+                                <li>버전: v3.0</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-sm mb-4 uppercase tracking-wider text-zinc-900 dark:text-zinc-100">Team</h4>
+                            <ul className="space-y-2 text-sm text-zinc-500">
+                                <li>설계팀: mate (7조)</li>
+                                <li>Frontend: React Native / Next.js</li>
+                                <li>Backend: Python, FastAPI</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div className="text-center border-t border-zinc-200 dark:border-zinc-800 pt-8">
+                        <p className="text-xs text-zinc-400">
+                            © 2025 Soulmatch Project Team. All rights reserved.
+                        </p>
+                    </div>
+                </div>
+            </footer>
         </div>
     );
 }
