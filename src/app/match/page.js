@@ -4,9 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import NavBar from "../components/NavBar";
-import api from "../lib/api"; // API 모듈 import
+import api from "../lib/api";
 
-// SVG 아이콘 컴포넌트들
 const MarsIcon = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={className}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5L21 3" />
@@ -24,7 +23,7 @@ const VenusIcon = ({ className }) => (
 );
 
 export default function MatchPage() {
-    const router = useRouter(); // 라우터 훅
+    const router = useRouter(); 
 
     const [formData, setFormData] = useState({
         p1: { name: "", gender: 1, year: "2000", month: "1", day: "1" },
@@ -54,14 +53,13 @@ export default function MatchPage() {
         setIsLoading(true);
 
         try {
-            // 1. 백엔드 DirectAnalysisRequest 스키마에 맞춰 데이터 변환
             const requestBody = {
                 user1_name: formData.p1.name,
                 user1_gender: formData.p1.gender,
                 user1_birth_year: parseInt(formData.p1.year),
                 user1_birth_month: parseInt(formData.p1.month),
                 user1_birth_day: parseInt(formData.p1.day),
-                user1_birth_hour: 12, // 시간은 기본값 처리 (필요시 입력폼 추가)
+                user1_birth_hour: 12, 
 
                 user2_name: formData.p2.name,
                 user2_gender: formData.p2.gender,
@@ -73,15 +71,12 @@ export default function MatchPage() {
 
             console.log("백엔드로 전송:", requestBody);
 
-            // 2. API 호출
             const response = await api.post("/analysis/calculate", requestBody);
 
             console.log("분석 결과:", response.data);
 
-            // 3. 결과를 로컬 스토리지에 저장 (Score 페이지에서 사용)
             localStorage.setItem("analysisResult", JSON.stringify(response.data));
 
-            // 4. 결과 페이지로 이동
             router.push("/score");
 
         } catch (error) {
@@ -98,7 +93,6 @@ export default function MatchPage() {
             <NavBar />
 
             <main className="flex-grow flex items-center justify-center px-4 py-12 relative">
-                {/* Background */}
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
                     <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] bg-[#5c2c86]/20 rounded-full blur-[100px] animate-pulse mix-blend-multiply dark:mix-blend-screen" />
                     <div className="absolute bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-[#f28b2d]/20 rounded-full blur-[100px] animate-pulse delay-1000 mix-blend-multiply dark:mix-blend-screen" />
@@ -121,7 +115,6 @@ export default function MatchPage() {
                     <form onSubmit={handleSubmit}>
                         <div className="flex flex-col lg:flex-row items-stretch gap-6 lg:gap-0 relative">
 
-                            {/* --- Person 1 Card --- */}
                             <div
                                 className={`flex-1 flex flex-col bg-white dark:bg-zinc-900 rounded-3xl border transition-all duration-300 relative z-10 overflow-hidden
                                 ${focusedSection === 0
@@ -141,7 +134,6 @@ export default function MatchPage() {
                                     </div>
 
                                     <div className="space-y-6">
-                                        {/* Name */}
                                         <div>
                                             <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">이름</label>
                                             <input
@@ -154,7 +146,6 @@ export default function MatchPage() {
                                             />
                                         </div>
 
-                                        {/* Gender */}
                                         <div>
                                             <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">성별</label>
                                             <div className="grid grid-cols-2 gap-3">
@@ -177,7 +168,6 @@ export default function MatchPage() {
                                             </div>
                                         </div>
 
-                                        {/* Date */}
                                         <div>
                                             <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">생년월일</label>
                                             <div className="flex gap-2">
@@ -211,7 +201,6 @@ export default function MatchPage() {
                                 </div>
                             </div>
 
-                            {/* --- Connector (Desktop) --- */}
                             <div className="hidden lg:flex flex-col items-center justify-center px-4 relative z-20">
                                 <div className="absolute inset-0 flex items-center justify-center">
                                     <div className="w-full h-px bg-zinc-200 dark:bg-zinc-800 border-t border-dashed border-zinc-300 dark:border-zinc-700"></div>
@@ -223,7 +212,6 @@ export default function MatchPage() {
                                 </div>
                             </div>
 
-                            {/* --- Connector (Mobile) --- */}
                             <div className="lg:hidden flex items-center justify-center py-2 relative z-20">
                                 <div className="absolute inset-0 flex items-center justify-center">
                                     <div className="h-full w-px bg-zinc-200 dark:bg-zinc-800 border-l border-dashed border-zinc-300 dark:border-zinc-700"></div>
@@ -236,7 +224,6 @@ export default function MatchPage() {
                             </div>
 
 
-                            {/* --- Person 2 Card --- */}
                             <div
                                 className={`flex-1 flex flex-col bg-white dark:bg-zinc-900 rounded-3xl border transition-all duration-300 relative z-10 overflow-hidden
                                 ${focusedSection === 1
@@ -256,7 +243,6 @@ export default function MatchPage() {
                                     </div>
 
                                     <div className="space-y-6">
-                                        {/* Name */}
                                         <div>
                                             <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">이름</label>
                                             <input
@@ -269,7 +255,6 @@ export default function MatchPage() {
                                             />
                                         </div>
 
-                                        {/* Gender */}
                                         <div>
                                             <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">성별</label>
                                             <div className="grid grid-cols-2 gap-3">
@@ -292,7 +277,6 @@ export default function MatchPage() {
                                             </div>
                                         </div>
 
-                                        {/* Date */}
                                         <div>
                                             <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">생년월일</label>
                                             <div className="flex gap-2">
@@ -327,7 +311,6 @@ export default function MatchPage() {
                             </div>
                         </div>
 
-                        {/* Submit Action */}
                         <div className="mt-12 text-center max-w-2xl mx-auto">
                             <button
                                 type="submit"

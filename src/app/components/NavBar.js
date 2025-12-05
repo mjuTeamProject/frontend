@@ -8,9 +8,8 @@ import { useRouter } from "next/navigation";
 export default function NavBar({ children }) {
     const router = useRouter();
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [mounted, setMounted] = useState(false); // 하이드레이션 불일치 방지용
+    const [mounted, setMounted] = useState(false);
 
-    // 초기 마운트 시 로그인 상태 확인
     useEffect(() => {
         setMounted(true);
         const token = localStorage.getItem("accessToken");
@@ -19,16 +18,12 @@ export default function NavBar({ children }) {
         }
     }, []);
 
-    // 로그아웃 처리
     const handleLogout = () => {
-        // 토큰 삭제
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
 
-        // 상태 업데이트
         setIsLoggedIn(false);
 
-        // 홈으로 이동 및 새로고침 (상태 초기화 확실하게 하기 위해)
         alert("로그아웃 되었습니다.");
         window.location.href = "/";
     };
@@ -36,7 +31,6 @@ export default function NavBar({ children }) {
     return (
         <nav className="w-full border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md sticky top-0 z-50">
             <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-                {/* 로고 영역 */}
                 <Link href="/" className="flex items-center gap-1">
                     <Image
                         src="/logo.png"
@@ -50,12 +44,9 @@ export default function NavBar({ children }) {
                     </span>
                 </Link>
 
-                {/* 우측 메뉴 영역 */}
                 <div className="flex items-center gap-4">
-                    {/* 페이지별 커스텀 버튼이 필요할 때 children으로 받음 (예: 랭킹 확인 등) */}
                     {children}
 
-                    {/* 로그인 상태에 따른 공통 버튼 */}
                     {mounted && (isLoggedIn ? (
                         <>
                             <Link

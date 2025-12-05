@@ -5,7 +5,6 @@ import Link from "next/link";
 import NavBar from "../components/NavBar";
 import api from "../lib/api";
 
-// --- SVG Icons for Medals ---
 const GoldMedal = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-10 h-10 text-yellow-400 drop-shadow-md filter">
         <path fillRule="evenodd" d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 00-.584.859 6.753 6.753 0 006.138 5.6 6.73 6.73 0 002.743 1.346A6.707 6.707 0 019.279 15H8.54c-1.036 0-1.875.84-1.875 1.875V19.5h-.75a2.25 2.25 0 00-2.25 2.25c0 .414.336.75.75.75h15a.75.75 0 00.75-.75 2.25 2.25 0 00-2.25-2.25h-.75v-2.625c0-1.036-.84-1.875-1.875-1.875h-.739a6.706 6.706 0 01-1.112-3.173 6.73 6.73 0 002.743-1.347 6.753 6.753 0 006.139-5.6.75.75 0 00-.585-.858 47.077 47.077 0 00-3.07-.543V2.62a.75.75 0 00-.658-.744 49.22 49.22 0 00-6.093-.377c-2.063 0-4.096.128-6.093.377a.75.75 0 00-.657.744zm0 2.629c0 1.196.312 2.32.857 3.294A5.266 5.266 0 013.16 5.337a45.6 45.6 0 012.006-.343v.256zm13.5 0v-.256c.674.1 1.343.214 2.006.343a5.265 5.265 0 01-2.863 3.207 6.72 6.72 0 00.857-3.294z" clipRule="evenodd" />
@@ -31,15 +30,13 @@ export default function RankingPage() {
     useEffect(() => {
         const fetchRankings = async () => {
             try {
-                // 백엔드 API: GET /api/ranking/daily
                 const response = await api.get('/ranking/daily');
 
-                // [수정] 백엔드에서 받은 실제 이름(user1_name, user2_name) 표시
                 if (response.data && response.data.rankings) {
                     const mappedData = response.data.rankings.map((item) => ({
                         id: item.id,
-                        user1: item.user1_name, // 첫 번째 사람 이름
-                        user2: item.user2_name, // 두 번째 사람 이름
+                        user1: item.user1_name, 
+                        user2: item.user2_name, 
                         score: Math.round(item.score),
                         comment: item.intro_message || "사랑 가득!",
                         date: new Date(item.created_at).toLocaleDateString()
@@ -61,7 +58,6 @@ export default function RankingPage() {
         fetchRankings();
     }, []);
 
-    // 순위 뱃지 렌더링 함수
     const renderRankBadge = (rank) => {
         switch (rank) {
             case 0: return <GoldMedal />;
@@ -83,7 +79,6 @@ export default function RankingPage() {
             <main className="flex-grow flex items-center justify-center px-4 py-12 relative overflow-hidden">
                 <div className="w-full max-w-3xl z-10">
 
-                    {/* Header */}
                     <div className="text-center mb-10">
                         <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm text-xs font-semibold text-zinc-500 mb-4">
                             <span className="w-2 h-2 rounded-full bg-[#f28b2d] animate-pulse"></span>
@@ -97,16 +92,13 @@ export default function RankingPage() {
                         </p>
                     </div>
 
-                    {/* Ranking Card - Glassmorphism */}
                     <div className="bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl shadow-2xl overflow-hidden">
 
-                        {/* List Header */}
                         <div className="hidden sm:flex items-center justify-between px-6 py-4 bg-zinc-50/50 dark:bg-zinc-950/30 border-b border-zinc-200/50 dark:border-zinc-800/50 text-xs font-bold text-zinc-400 uppercase tracking-wider">
                             <div className="pl-4">Rank & Couple</div>
                             <div className="pr-4">Compatibility Score</div>
                         </div>
 
-                        {/* Ranking Items */}
                         <div className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
                             {isLoading ? (
                                 <div className="p-10 text-center text-zinc-500">데이터를 불러오는 중입니다...</div>
@@ -119,17 +111,13 @@ export default function RankingPage() {
                                         className={`group flex items-center justify-between p-5 sm:px-6 transition-all hover:bg-white/60 dark:hover:bg-zinc-800/60
                                         ${index < 3 ? 'bg-gradient-to-r from-[#5c2c86]/[0.03] to-[#f28b2d]/[0.03]' : ''}`}
                                     >
-                                        {/* Left: Rank & Names */}
                                         <div className="flex items-center gap-4 sm:gap-6">
-                                            {/* Rank Badge */}
                                             <div className={`flex-shrink-0 transition-transform duration-300 ${index < 3 ? 'group-hover:scale-110' : ''}`}>
                                                 {renderRankBadge(index)}
                                             </div>
 
-                                            {/* User Info */}
                                             <div className="flex flex-col">
                                                 <div className="font-bold text-base sm:text-lg text-zinc-800 dark:text-zinc-200 flex items-center gap-2">
-                                                    {/* [수정] 두 사람의 이름을 모두 표시하고 하트로 연결 */}
                                                     <span>{item.user1}</span>
                                                     <span className="text-[#f28b2d] text-xs">♥</span>
                                                     <span>{item.user2}</span>
@@ -143,9 +131,7 @@ export default function RankingPage() {
                                             </div>
                                         </div>
 
-                                        {/* Right: Score */}
                                         <div className="flex items-center gap-4">
-                                            {/* Progress Bar (Visual) */}
                                             <div className="hidden sm:block w-32 h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                                                 <div
                                                     className={`h-full rounded-full ${index < 3 ? 'bg-gradient-to-r from-[#5c2c86] to-[#f28b2d]' : 'bg-zinc-300 dark:bg-zinc-700'}`}
@@ -153,7 +139,6 @@ export default function RankingPage() {
                                                 ></div>
                                             </div>
 
-                                            {/* Score Number */}
                                             <div className="text-right min-w-[60px]">
                                                 <span className={`block text-2xl font-black leading-none ${index < 3 ? 'text-transparent bg-clip-text bg-gradient-to-r from-[#5c2c86] to-[#f28b2d]' : 'text-zinc-400'}`}>
                                                     {item.score}
@@ -165,7 +150,6 @@ export default function RankingPage() {
                             )}
                         </div>
 
-                        {/* More Button */}
                         <div className="p-4 border-t border-zinc-200/50 dark:border-zinc-800/50 text-center bg-zinc-50/30 dark:bg-zinc-950/30">
                             <button className="text-sm font-bold text-zinc-500 hover:text-[#5c2c86] transition-colors py-2 px-6 rounded-full hover:bg-white dark:hover:bg-zinc-800 shadow-sm border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700">
                                 전체 순위 보기 +
@@ -174,45 +158,6 @@ export default function RankingPage() {
                     </div>
                 </div>
             </main>
-
-            {/* Footer */}
-            <footer className="bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 pt-16 pb-8">
-                <div className="max-w-6xl mx-auto px-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
-                        <div>
-                            <h4 className="font-bold text-lg mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#5c2c86] to-[#f28b2d]">
-                                Soulmatch
-                            </h4>
-                            <p className="text-sm text-zinc-500 leading-relaxed">
-                                명지대학교 팀프로젝트1 결과물입니다.<br />
-                                AI 기술을 활용하여 새로운 데이팅 경험을 제공합니다.
-                            </p>
-                        </div>
-                        <div>
-                            <h4 className="font-bold text-sm mb-4 uppercase tracking-wider text-zinc-900 dark:text-zinc-100">Project Info</h4>
-                            <ul className="space-y-2 text-sm text-zinc-500">
-                                <li>2025학년도 2학기 상세설계보고서</li>
-                                <li>지도교수: 한승철 교수님</li>
-                                <li>소속: 명지대학교 컴퓨터공학과</li>
-                                <li>버전: v3.0</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="font-bold text-sm mb-4 uppercase tracking-wider text-zinc-900 dark:text-zinc-100">Team</h4>
-                            <ul className="space-y-2 text-sm text-zinc-500">
-                                <li>설계팀: mate (7조)</li>
-                                <li>Frontend: React Native / Next.js</li>
-                                <li>Backend: Python, FastAPI</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div className="text-center border-t border-zinc-200 dark:border-zinc-800 pt-8">
-                        <p className="text-xs text-zinc-400">
-                            © 2025 Soulmatch Project Team. All rights reserved.
-                        </p>
-                    </div>
-                </div>
-            </footer>
         </div>
     );
 }

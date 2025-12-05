@@ -10,14 +10,12 @@ export default function ProfilePage() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // 수정 모드 상태
     const [editMode, setEditMode] = useState({ nickname: false, email: false });
     const [tempInput, setTempInput] = useState({});
 
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                // 백엔드: GET /api/users/me
                 const response = await api.get('/users/me');
                 setUser(response.data);
             } catch (error) {
@@ -32,27 +30,21 @@ export default function ProfilePage() {
         fetchProfile();
     }, [router]);
 
-    // 수정 버튼 클릭 핸들러
     const handleEditClick = (field) => {
         setEditMode({ ...editMode, [field]: true });
         setTempInput({ ...tempInput, [field]: user[field] || '' });
     };
 
-    // 취소 버튼 클릭 핸들러
     const handleCancel = (field) => {
         setEditMode({ ...editMode, [field]: false });
     };
 
-    // 저장 버튼 클릭 핸들러
     const handleSave = async (field) => {
         try {
-            // 백엔드 스키마: UserUpdate { nickname?: str, email?: str }
             const payload = { [field]: tempInput[field] };
 
-            // PUT /api/users/me
             const response = await api.put('/users/me', payload);
 
-            // 응답값으로 상태 업데이트
             setUser(response.data);
             setEditMode({ ...editMode, [field]: false });
         } catch (error) {
@@ -80,7 +72,6 @@ export default function ProfilePage() {
 
                 <div className="space-y-6">
 
-                    {/* --- 아이디 (수정 불가) --- */}
                     <div className="flex flex-col">
                         <label className="text-sm font-semibold text-gray-500 mb-1">아이디</label>
                         <div className="flex items-center h-10">
@@ -88,7 +79,6 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    {/* --- 닉네임 (수정 가능) --- */}
                     <div className="flex flex-col">
                         <label className="text-sm font-semibold text-gray-500 mb-1">닉네임</label>
                         <div className="flex items-center justify-between h-10">
@@ -120,7 +110,6 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    {/* --- 이메일 (수정 가능) --- */}
                     <div className="flex flex-col">
                         <label className="text-sm font-semibold text-gray-500 mb-1">이메일</label>
                         <div className="flex items-center justify-between h-10">
@@ -154,7 +143,6 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    {/* --- 회원 가입일 (읽기 전용) --- */}
                     <div className="flex flex-col mt-4 pt-4 border-t">
                         <label className="text-xs font-semibold text-gray-400 mb-1">가입일</label>
                         <span className="text-xs text-gray-500">

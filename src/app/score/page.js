@@ -2,45 +2,29 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { toPng } from "html-to-image";
 import NavBar from "../components/NavBar";
-import api from "../lib/api"; // API 모듈 임포트
-
-// Footer 컴포넌트
-const Footer = () => (
-    <footer className="bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 pt-16 pb-8 mt-auto">
-        <div className="max-w-6xl mx-auto px-6">
-            <div className="text-center">
-                <p className="text-xs text-zinc-400">
-                    © 2025 Soulmatch Project Team. All rights reserved.
-                </p>
-            </div>
-        </div>
-    </footer>
-);
+import Footer from "../components/Footer";
+import api from "../lib/api";
 
 export default function ScorePage() {
     const router = useRouter();
     const certificateRef = useRef(null);
 
-    // --- 상태 관리 ---
-    const [scoreData, setScoreData] = useState(null); // API 결과 데이터
+    const [scoreData, setScoreData] = useState(null);
     const [animatedScore, setAnimatedScore] = useState(0);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     const [showRankModal, setShowRankModal] = useState(false);
     const [showCertModal, setShowCertModal] = useState(false);
     const [rankComment, setRankComment] = useState("");
 
-    // --- 초기 데이터 로드 ---
     useEffect(() => {
-        // 1. 로그인 체크
         const token = localStorage.getItem("accessToken");
         if (token) setIsLoggedIn(true);
 
-        // 2. 분석 결과 가져오기
         const savedResult = localStorage.getItem("analysisResult");
-
         if (savedResult) {
             try {
                 const parsedResult = JSON.parse(savedResult);
@@ -55,7 +39,6 @@ export default function ScorePage() {
         }
     }, [router]);
 
-    // --- 데이터 가공 ---
     const score = scoreData ? Math.round(scoreData.compatibility_score) : 0;
     const userNames = {
         me: scoreData?.user1_name || "나",
@@ -63,7 +46,6 @@ export default function ScorePage() {
     };
     const interpretation = scoreData?.interpretation || "결과를 불러오는 중입니다...";
 
-    // --- 테마 설정 ---
     const getTheme = (s) => {
         if (s >= 80) return {
             color: "text-[#5c2c86]",
@@ -74,7 +56,7 @@ export default function ScorePage() {
             icon: "💖",
             message: "천생연분이에요!",
             level: "환상 궁합",
-            certBg: "bg-gradient-to-br from-[#5c2c86]/10 to-[#f28b2d]/10"
+            certBg: "bg-gradient-to-br from-[#5c2c86]/5 to-[#f28b2d]/5"
         };
         if (s >= 60) return {
             color: "text-emerald-600",
@@ -85,7 +67,7 @@ export default function ScorePage() {
             icon: "🍀",
             message: "좋은 인연이네요!",
             level: "좋은 궁합",
-            certBg: "bg-gradient-to-br from-emerald-500/10 to-teal-400/10"
+            certBg: "bg-gradient-to-br from-emerald-500/5 to-teal-400/5"
         };
         if (s >= 40) return {
             color: "text-amber-500",
@@ -96,7 +78,7 @@ export default function ScorePage() {
             icon: "🙂",
             message: "노력이 필요해요",
             level: "보통 궁합",
-            certBg: "bg-gradient-to-br from-amber-500/10 to-orange-400/10"
+            certBg: "bg-gradient-to-br from-amber-500/5 to-orange-400/5"
         };
         return {
             color: "text-red-500",
@@ -107,20 +89,17 @@ export default function ScorePage() {
             icon: "⚡",
             message: "위험한 관계일수도..",
             level: "주의 필요",
-            certBg: "bg-gradient-to-br from-red-500/10 to-pink-500/10"
+            certBg: "bg-gradient-to-br from-red-500/5 to-pink-500/5"
         };
     };
 
     const theme = getTheme(score);
 
-    // --- 점수 애니메이션 ---
     useEffect(() => {
         if (!scoreData) return;
-
         let start = 0;
         const end = score;
         if (start === end) return;
-
         let timer = setInterval(() => {
             start += 1;
             setAnimatedScore(start);
@@ -129,34 +108,24 @@ export default function ScorePage() {
                 clearInterval(timer);
             }
         }, 15);
-
         return () => clearInterval(timer);
     }, [score, scoreData]);
 
-    // --- 랭킹 등록 핸들러 (API 연동) ---
     const handleRankSubmit = async () => {
         if (!rankComment.trim()) {
             alert("한 줄 소개를 입력해주세요!");
             return;
         }
-
         try {
-            // [수정됨] 분석했던 이름 2개도 함께 전송
             const payload = {
-                score: scoreData.compatibility_score, // 원본 소수점 점수 전송
+                score: scoreData.compatibility_score,
                 intro_message: rankComment,
                 user1_name: scoreData.user1_name || "이름없음",
                 user2_name: scoreData.user2_name || "이름없음"
             };
-
             await api.post("/ranking/register", payload);
-
             alert("랭킹에 성공적으로 등록되었습니다!");
             setShowRankModal(false);
-
-            // 등록 후 랭킹 페이지로 이동하고 싶다면 주석 해제
-            // router.push("/rankingPage");
-
         } catch (error) {
             console.error("Ranking registration failed:", error);
             const msg = error.response?.data?.detail || "랭킹 등록에 실패했습니다.";
@@ -164,23 +133,28 @@ export default function ScorePage() {
         }
     };
 
-    // --- 이미지 저장 핸들러 ---
     const handleDownloadImage = async () => {
         if (!certificateRef.current) return;
+        setIsDownloading(true);
+
         try {
-            const html2canvas = (await import('html2canvas')).default;
-            const canvas = await html2canvas(certificateRef.current, {
-                scale: 2,
-                backgroundColor: null,
+            const dataUrl = await toPng(certificateRef.current, {
+                cacheBust: true,
+                backgroundColor: '#ffffff',
+                pixelRatio: 3,
+                skipFonts: true, 
             });
-            const image = canvas.toDataURL("image/png");
+
             const link = document.createElement("a");
-            link.href = image;
-            link.download = `Soulmatch_${score}_score.png`;
+            link.download = `Soulmatch_${userNames.me}_${userNames.partner}_${score}점.png`;
+            link.href = dataUrl;
             link.click();
+
         } catch (error) {
             console.error("이미지 저장 실패:", error);
-            alert("이미지 저장 기능을 사용하려면 html2canvas 라이브러리가 필요합니다.\n(현재 데모 모드)");
+            alert("이미지 저장 중 오류가 발생했습니다.");
+        } finally {
+            setIsDownloading(false);
         }
     };
 
@@ -222,7 +196,6 @@ export default function ScorePage() {
                                 {theme.message}
                             </p>
 
-                            {/* 백엔드 해석 메시지 표시 */}
                             <div className="mt-4 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-100 dark:border-zinc-700/50">
                                 <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed break-keep">
                                     "{interpretation}"
@@ -281,8 +254,9 @@ export default function ScorePage() {
                             ) : (
                                 <button
                                     onClick={() => {
-                                        alert("로그인이 필요한 기능입니다.");
-                                        router.push("/login");
+                                        if (confirm("로그인이 필요한 기능입니다. 로그인 페이지로 이동하시겠습니까?")) {
+                                            router.push("/login");
+                                        }
                                     }}
                                     className="w-full py-4 rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-400 font-bold hover:border-[#5c2c86] hover:text-[#5c2c86] transition-all"
                                 >
@@ -302,7 +276,6 @@ export default function ScorePage() {
                 </div>
             </main>
 
-            {/* 랭킹 등록 모달 */}
             {showRankModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
                     <div className="bg-white dark:bg-zinc-900 w-full max-w-sm rounded-2xl p-6 shadow-2xl transform transition-all scale-100">
@@ -344,7 +317,6 @@ export default function ScorePage() {
                 </div>
             )}
 
-            {/* 인증서 모달 */}
             {showCertModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
                     <div className="flex flex-col items-center w-full max-w-md">
@@ -353,7 +325,8 @@ export default function ScorePage() {
                             className={`w-full bg-white relative overflow-hidden rounded-t-2xl p-8 text-center shadow-2xl ${theme.certBg}`}
                         >
                             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-current to-transparent opacity-30 text-zinc-400"></div>
-                            <div className="border-4 border-double border-zinc-200 p-6 rounded-xl bg-white/60 backdrop-blur-sm">
+
+                            <div className="border-4 border-double border-zinc-200 p-6 rounded-xl bg-white/80 backdrop-blur-sm">
                                 <div className="text-xs font-bold text-zinc-400 tracking-[0.3em] uppercase mb-4">Official Certificate</div>
 
                                 <h2 className="text-2xl font-serif font-bold text-zinc-800 mb-2">궁합 분석 인증서</h2>
@@ -366,11 +339,11 @@ export default function ScorePage() {
                                 </div>
 
                                 <div className="mb-6">
-                                    <div className="text-6xl font-black text-zinc-900 mb-2">{score}점</div>
+                                    <div className="text-6xl font-black text-zinc-900 mb-2 tracking-tighter">{score}점</div>
                                     <div className={`text-lg font-bold ${theme.color}`}>{theme.level}</div>
                                 </div>
 
-                                <p className="text-sm text-zinc-500 font-serif italic mb-6">
+                                <p className="text-sm text-zinc-600 font-serif italic mb-8 leading-relaxed">
                                     "{interpretation}"
                                 </p>
 
@@ -396,10 +369,20 @@ export default function ScorePage() {
                             </button>
                             <button
                                 onClick={handleDownloadImage}
-                                className="flex-[2] py-3 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold text-sm flex items-center justify-center gap-2"
+                                disabled={isDownloading}
+                                className="flex-[2] py-3 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                이미지로 저장하기
+                                {isDownloading ? (
+                                    <>
+                                        <span className="w-4 h-4 border-2 border-white/30 border-t-white dark:border-zinc-900/30 dark:border-t-zinc-900 rounded-full animate-spin"></span>
+                                        저장 중...
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                        이미지로 저장하기
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>

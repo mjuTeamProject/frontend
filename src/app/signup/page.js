@@ -4,16 +4,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import NavBar from "../components/NavBar";
-import api from "../lib/api"; // API 모듈 import
+import api from "../lib/api"; 
 
 export default function SignupPage() {
     const router = useRouter();
 
-    // 상태 관리
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [nickname, setNickname] = useState(""); // 백엔드 필수 필드 추가
-    const [email, setEmail] = useState(""); // 선택 필드
+    const [nickname, setNickname] = useState(""); 
+    const [email, setEmail] = useState(""); 
 
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -23,7 +22,6 @@ export default function SignupPage() {
         setIsLoading(true);
         setError("");
 
-        // 유효성 검사
         if (!username || !password || !nickname) {
             setError("아이디, 비밀번호, 닉네임을 모두 입력해주세요.");
             setIsLoading(false);
@@ -36,12 +34,11 @@ export default function SignupPage() {
         }
 
         try {
-            // 실제 백엔드 API 호출
             await api.post("/auth/register", {
                 username,
                 password,
                 nickname,
-                email: email || undefined, // 비어있으면 undefined 전송
+                email: email || undefined, 
             });
 
             alert("회원가입이 완료되었습니다! 🎉\n로그인 페이지로 이동합니다.");
@@ -49,7 +46,6 @@ export default function SignupPage() {
 
         } catch (err) {
             console.error(err);
-            // 에러 메시지 처리 (백엔드 에러 메시지 우선 표시)
             const msg = err.response?.data?.detail || "회원가입 중 오류가 발생했습니다.";
             setError(msg);
         } finally {
@@ -59,17 +55,13 @@ export default function SignupPage() {
 
     return (
         <div className="min-h-screen flex flex-col bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 font-sans selection:bg-[#5c2c86] selection:text-white">
-            {/* Navigation Bar */}
             <NavBar />
 
-            {/* Main Content */}
             <main className="flex-grow flex items-center justify-center px-6 py-12 relative overflow-hidden">
-                {/* Background Decorations */}
                 <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-[#5c2c86]/10 rounded-full blur-3xl -z-10 animate-pulse" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-[#f28b2d]/10 rounded-full blur-3xl -z-10 animate-pulse delay-700" />
 
                 <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl p-8 md:p-10 relative z-10">
-                    {/* Header */}
                     <div className="text-center mb-8">
                         <h1 className="text-2xl md:text-3xl font-bold mb-2 text-zinc-900 dark:text-white">
                             계정 만들기
@@ -79,10 +71,8 @@ export default function SignupPage() {
                         </p>
                     </div>
 
-                    {/* Form */}
                     <form onSubmit={handleSignup} className="space-y-5">
 
-                        {/* Username (ID) Input */}
                         <div>
                             <label
                                 htmlFor="username"
@@ -100,7 +90,6 @@ export default function SignupPage() {
                             />
                         </div>
 
-                        {/* Nickname Input (New) */}
                         <div>
                             <label
                                 htmlFor="nickname"
@@ -118,7 +107,6 @@ export default function SignupPage() {
                             />
                         </div>
 
-                        {/* Email Input (Optional) */}
                         <div>
                             <label
                                 htmlFor="email"
@@ -136,7 +124,6 @@ export default function SignupPage() {
                             />
                         </div>
 
-                        {/* Password Input */}
                         <div>
                             <label
                                 htmlFor="password"
@@ -154,7 +141,6 @@ export default function SignupPage() {
                             />
                         </div>
 
-                        {/* Error Message */}
                         {error && (
                             <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-center gap-2 text-sm text-red-600 dark:text-red-400 animate-pulse">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 shrink-0">
@@ -164,7 +150,6 @@ export default function SignupPage() {
                             </div>
                         )}
 
-                        {/* Submit Button */}
                         <button
                             type="submit"
                             disabled={isLoading}
@@ -187,7 +172,6 @@ export default function SignupPage() {
                 </div>
             </main>
 
-            {/* Footer */}
             <footer className="bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 pt-16 pb-8">
                 <div className="max-w-6xl mx-auto px-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">

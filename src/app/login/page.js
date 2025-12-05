@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import NavBar from "../components/NavBar";
-import api from "../lib/api"; // API 모듈 import
+import api from "../lib/api";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -18,18 +18,15 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
-            // 백엔드 API 호출
             const response = await api.post("/auth/login", {
                 username,
                 password,
             });
 
-            // 토큰 저장
             const { access_token, refresh_token } = response.data;
             localStorage.setItem("accessToken", access_token);
             localStorage.setItem("refreshToken", refresh_token);
 
-            // 로그인 성공 후 메인 페이지로 이동
             router.push("/");
 
         } catch (error) {
@@ -45,7 +42,6 @@ export default function LoginPage() {
             <NavBar />
 
             <main className="flex-grow flex items-center justify-center px-6 py-12 relative overflow-hidden">
-                {/* Background Decorations */}
                 <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-[#5c2c86]/10 rounded-full blur-3xl -z-10 animate-pulse" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-[#f28b2d]/10 rounded-full blur-3xl -z-10 animate-pulse delay-700" />
 
